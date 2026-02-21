@@ -22,10 +22,15 @@ export async function GET(request: NextRequest) {
     request.headers.get('authorization') ??
     request.headers.get('Authorization') ??
     ''
-  const token = auth.startsWith('Bearer ') ? auth.slice(7).trim() : ''
+  const bearerToken = auth.startsWith('Bearer ') ? auth.slice(7).trim() : ''
+  const customHeader = request.headers.get('x-cron-secret')?.trim() ?? ''
+  const token = bearerToken || customHeader
   if (!token) {
     return Response.json(
-      { error: 'Unauthorized', hint: 'Missing Authorization: Bearer <token> header' },
+      {
+        error: 'Unauthorized',
+        hint: 'Send Authorization: Bearer <token> OR header X-Cron-Secret: <token>',
+      },
       { status: 401 }
     )
   }
