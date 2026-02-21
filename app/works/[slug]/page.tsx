@@ -2,13 +2,12 @@ import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { WorkHero } from '@/components/WorkHero'
-import { WorkDetailSections } from '@/components/WorkDetailSections'
-import { WorkMetaBox } from '@/components/WorkMetaBox'
-import { WorkManualVideos } from '@/components/WorkManualVideos'
-import { WorkDetailVideos } from '@/components/WorkDetailVideos'
+import { TrailerSection } from '@/components/TrailerSection'
+import { ReactionSection } from '@/components/ReactionSection'
+import { ShortsSection } from '@/components/ShortsSection'
+import { SpoilerSection } from '@/components/SpoilerSection'
+import { GoodsSection } from '@/components/GoodsSection'
 import { WatchPlatformButtons } from '@/components/WatchPlatformButtons'
-import { ReactionSummary } from '@/components/ReactionSummary'
-import { RevenueSection } from '@/components/RevenueSection'
 import type { Work, Video } from '@/types/database'
 
 export const revalidate = 300
@@ -25,7 +24,7 @@ async function getWork(slug: string) {
       *,
       videos (
         id, work_id, youtube_id, title, video_type,
-        thumbnail_url, view_count, channel_name, duration_sec
+        thumbnail_url, view_count, channel_name, duration_sec, published_at
       )
     `)
     .eq('slug', slug)
@@ -57,11 +56,19 @@ export default async function WorkDetailPage({ params }: PageProps) {
   if (!work) notFound()
 
   const videos = work.videos ?? []
-  const sortedVideos = [...videos].sort((a, b) => Number(b.view_count - a.view_count))
-  const manualIds = work.manual_video_ids ?? []
+  const trailers = videos.filter((v) => v.video_type === 'trailer')
+  const reactions = videos.filter((v) => v.video_type === 'review' || v.video_type === 'etc')
+  const shorts = videos.filter((v) => v.video_type === 'shorts' || (v.duration_sec != null && v.duration_sec <= 60))
+
+  const bestTrailer =
+    trailers.length > 0
+      ? trailers.reduce((a, b) => (Number(a.view_count) >= Number(b.view_count) ? a : b))
+      : null
+
+  const manualTrailerId = work.manual_video_ids?.[0] ?? null
 
   return (
-    <main className="min-h-screen pb-20 md:pb-0">
+    <main className="min-h-screen pb-24 md:pb-0">
       <header className="sticky top-0 z-10 border-b border-border bg-bg/95 backdrop-blur">
         <div className="mx-auto flex max-w-content items-center justify-between px-4 py-4">
           <a href="/" className="font-heading text-2xl font-bold tracking-wide text-accent">
@@ -76,30 +83,22 @@ export default async function WorkDetailPage({ params }: PageProps) {
           </nav>
         </div>
       </header>
+
       <WorkHero work={work} />
-      {/* [작품 제목] [한 줄 요약] */}
-      <WorkDetailSections work={work} />
-      {/* [메타 정보 박스] */}
-      <section className="mx-auto max-w-content px-4 pb-6">
-        <WorkMetaBox work={work} />
-      </section>
-      {/* [스포 방지 설명] */}
-      <section className="mx-auto max-w-content px-4 pb-4">
-        <p className="text-sm text-text-muted">
-          아래 영상은 예고편·리뷰 위주로 수집했으며, 스포일치를 최소화했습니다. 결말·핵심 반전은 리뷰 제목에서 노출될 수 있습니다.
-        </p>
-      </section>
-      {/* [영상] — 수동 등록 + 자동 수집, 필터: 전체/쇼츠/예고편/리뷰 */}
-      <section className="mx-auto max-w-content space-y-10 px-4 py-6">
-        {manualIds.length > 0 && <WorkManualVideos youtubeIds={manualIds} />}
-        <WorkDetailVideos videos={sortedVideos} />
-      </section>
-      {/* [시청 플랫폼 버튼] 어디서 볼까, 플랫폼별 컬러 */}
       <WatchPlatformButtons work={work} />
-      {/* [반응/리뷰 요약] placeholder */}
-      <ReactionSummary work={work} />
-      {/* [수익 영역] 공식 굿즈 + 제휴 링크 */}
-      <RevenueSection work={work} />
+
+      <TrailerSection
+        trailerVideo={bestTrailer}
+        manualTrailerId={manualTrailerId}
+      />
+
+      <ReactionSection videos={[...reactions].sort((a, b) => Number(b.view_count) - Number(a.view_count))} />
+
+      <ShortsSection videos={shorts} />
+
+      <SpoilerSection work={work} />
+
+      <GoodsSection work={work} />
     </main>
   )
 }

@@ -185,3 +185,27 @@ export async function fetchYouTubeVideos(
     }
   })
 }
+
+/**
+ * 랭킹용 — 작품명 기준 YouTube 인기 점수 (예고편 검색, 조회수 합 + 공식 채널 가중치)
+ * 외부 API(JustWatch) 없이 "요즘 많이 보는 콘텐츠" 체감 인기 산출
+ */
+export async function getYouTubeEngagementScore(workTitle: string): Promise<number> {
+  const key = process.env.YOUTUBE_API_KEY
+  if (!key) return 0
+
+  const list = await searchYouTube(key, `${workTitle} 예고편`, { maxResults: 10 })
+  if (list.length === 0) return 0
+
+  const details = await getVideoDetails(key, list.map((r) => r.id))
+  const byId = new Map(list.map((r) => [r.id, { channelTitle: r.channelTitle }]))
+
+  let score = 0
+  for (const item of details as Array<{ id: string; statistics?: { viewCount?: string }; snippet?: { channelTitle?: string }>) {
+    const views = Number(item.statistics?.viewCount ?? 0)
+    const channelTitle = item.snippet?.channelTitle ?? byId.get(item.id)?.channelTitle ?? ''
+    const bonus = isOfficialChannel(channelTitle) ? 1.5 : 1
+    score += Math.round(views * bonus)
+  }
+  return score
+}
