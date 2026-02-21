@@ -15,6 +15,8 @@ export interface Work {
   genre: string[] | null
   platform: string[] | null
   release_date: string | null
+  end_date: string | null
+  manual_video_ids: string[] | null
   rating: number | null
   poster_url: string | null
   backdrop_url: string | null
@@ -72,6 +74,8 @@ export interface WorkInsert {
   genre?: string[] | null
   platform?: string[] | null
   release_date?: string | null
+  end_date?: string | null
+  manual_video_ids?: string[] | null
   rating?: number | null
   poster_url?: string | null
   backdrop_url?: string | null

@@ -2,8 +2,13 @@ import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { WorkHero } from '@/components/WorkHero'
+import { WorkDetailSections } from '@/components/WorkDetailSections'
+import { WorkMetaBox } from '@/components/WorkMetaBox'
+import { WorkManualVideos } from '@/components/WorkManualVideos'
 import { WorkDetailVideos } from '@/components/WorkDetailVideos'
-import { RelatedItems } from '@/components/RelatedItems'
+import { WatchPlatformButtons } from '@/components/WatchPlatformButtons'
+import { ReactionSummary } from '@/components/ReactionSummary'
+import { RevenueSection } from '@/components/RevenueSection'
 import type { Work, Video } from '@/types/database'
 
 export const revalidate = 300
@@ -53,6 +58,7 @@ export default async function WorkDetailPage({ params }: PageProps) {
 
   const videos = work.videos ?? []
   const sortedVideos = [...videos].sort((a, b) => Number(b.view_count - a.view_count))
+  const manualIds = work.manual_video_ids ?? []
 
   return (
     <main className="min-h-screen pb-20 md:pb-0">
@@ -70,8 +76,23 @@ export default async function WorkDetailPage({ params }: PageProps) {
         </div>
       </header>
       <WorkHero work={work} />
-      <WorkDetailVideos videos={sortedVideos} />
-      <RelatedItems work={work} />
+      {/* [작품 제목] [한 줄 요약] */}
+      <WorkDetailSections work={work} />
+      {/* [메타 정보 박스] */}
+      <section className="mx-auto max-w-content px-4 pb-6">
+        <WorkMetaBox work={work} />
+      </section>
+      {/* [영상 (예고편/리뷰)] — 수동 등록 + 자동 수집 */}
+      <section className="mx-auto max-w-content space-y-10 px-4 py-6">
+        {manualIds.length > 0 && <WorkManualVideos youtubeIds={manualIds} />}
+        <WorkDetailVideos videos={sortedVideos} />
+      </section>
+      {/* [시청 플랫폼 버튼] 어디서 볼까, 플랫폼별 컬러 */}
+      <WatchPlatformButtons work={work} />
+      {/* [반응/리뷰 요약] placeholder */}
+      <ReactionSummary work={work} />
+      {/* [수익 영역] 공식 굿즈 + 제휴 링크 */}
+      <RevenueSection work={work} />
     </main>
   )
 }
