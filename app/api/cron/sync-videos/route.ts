@@ -12,10 +12,28 @@ function sleep(ms: number) {
 }
 
 export async function GET(request: NextRequest) {
-  const auth = request.headers.get('authorization')
-  const token = auth?.startsWith('Bearer ') ? auth.slice(7) : ''
-  if (!CRON_SECRET || token !== CRON_SECRET) {
-    return Response.json({ error: 'Unauthorized' }, { status: 401 })
+  if (!CRON_SECRET) {
+    return Response.json(
+      { error: 'Unauthorized', hint: 'CRON_SECRET not set on server (check Vercel env)' },
+      { status: 503 }
+    )
+  }
+  const auth =
+    request.headers.get('authorization') ??
+    request.headers.get('Authorization') ??
+    ''
+  const token = auth.startsWith('Bearer ') ? auth.slice(7).trim() : ''
+  if (!token) {
+    return Response.json(
+      { error: 'Unauthorized', hint: 'Missing Authorization: Bearer <token> header' },
+      { status: 401 }
+    )
+  }
+  if (token !== CRON_SECRET) {
+    return Response.json(
+      { error: 'Unauthorized', hint: 'Token does not match CRON_SECRET' },
+      { status: 401 }
+    )
   }
 
   const supabase = createClient()
