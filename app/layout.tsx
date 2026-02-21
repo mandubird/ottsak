@@ -18,13 +18,13 @@ const montserrat = Montserrat({
 
 export const metadata: Metadata = {
   title: {
-    default: '옽싹 | OTT 작품 판단 허브',
-    template: '%s | 옽싹',
+    default: '오싹 | 한국 OTT 주간 인기 랭킹',
+    template: '%s | 오싹',
   },
-  description: '보기 전에 판단한다. 예고편, 리뷰, 평점을 한눈에.',
-  keywords: ['OTT', '넷플릭스', '드라마', '영화', '예고편', '리뷰'],
+  description: '한국 OTT 통합 주간 TOP10, 영상 중심 랭킹 허브. 이번주 인기·지난주 비교·월간 정리.',
+  keywords: ['OTT', '넷플릭스', '티빙', '디즈니플러스', '랭킹', '인기작', '예고편', '리뷰'],
   openGraph: {
-    siteName: '옽싹',
+    siteName: '오싹',
     locale: 'ko_KR',
     type: 'website',
   },

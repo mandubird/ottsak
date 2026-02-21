@@ -41,7 +41,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   if (!work) return { title: '작품을 찾을 수 없습니다' }
   const description = work.overview?.substring(0, 160) ?? undefined
   return {
-    title: `${work.title} — 옽싹에서 미리 판단하기`,
+    title: `${work.title} — 오싹`,
     description,
     openGraph: {
       title: work.title,
@@ -65,9 +65,10 @@ export default async function WorkDetailPage({ params }: PageProps) {
       <header className="sticky top-0 z-10 border-b border-border bg-bg/95 backdrop-blur">
         <div className="mx-auto flex max-w-content items-center justify-between px-4 py-4">
           <a href="/" className="font-heading text-2xl font-bold tracking-wide text-accent">
-            옽싹
+            오싹
           </a>
           <nav className="hidden gap-6 text-sm text-text-muted md:flex">
+            <a href="/ranking" className="hover:text-text">랭킹</a>
             <a href="/search" className="hover:text-text">검색</a>
             <a href="/works" className="hover:text-text">작품</a>
             <a href="/videos" className="hover:text-text">영상</a>
@@ -82,7 +83,13 @@ export default async function WorkDetailPage({ params }: PageProps) {
       <section className="mx-auto max-w-content px-4 pb-6">
         <WorkMetaBox work={work} />
       </section>
-      {/* [영상 (예고편/리뷰)] — 수동 등록 + 자동 수집 */}
+      {/* [스포 방지 설명] */}
+      <section className="mx-auto max-w-content px-4 pb-4">
+        <p className="text-sm text-text-muted">
+          아래 영상은 예고편·리뷰 위주로 수집했으며, 스포일치를 최소화했습니다. 결말·핵심 반전은 리뷰 제목에서 노출될 수 있습니다.
+        </p>
+      </section>
+      {/* [영상] — 수동 등록 + 자동 수집, 필터: 전체/쇼츠/예고편/리뷰 */}
       <section className="mx-auto max-w-content space-y-10 px-4 py-6">
         {manualIds.length > 0 && <WorkManualVideos youtubeIds={manualIds} />}
         <WorkDetailVideos videos={sortedVideos} />

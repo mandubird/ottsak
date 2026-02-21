@@ -56,9 +56,10 @@ export default async function WorksPage({ searchParams }: PageProps) {
       <header className="border-b border-border">
         <div className="mx-auto flex max-w-content items-center justify-between px-4 py-4">
           <Link href="/" className="font-heading text-2xl font-bold tracking-wide text-accent">
-            옽싹
+            오싹
           </Link>
           <nav className="hidden gap-6 text-sm text-text-muted md:flex">
+            <Link href="/ranking" className="hover:text-text">랭킹</Link>
             <Link href="/search" className="hover:text-text">검색</Link>
             <Link href="/works" className="text-text">작품</Link>
             <Link href="/videos" className="hover:text-text">영상</Link>

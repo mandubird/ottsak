@@ -5,6 +5,7 @@ import { usePathname } from 'next/navigation'
 
 const ITEMS = [
   { href: '/', label: '홈', icon: '🏠' },
+  { href: '/ranking', label: '랭킹', icon: '📊' },
   { href: '/search', label: '검색', icon: '🔍' },
   { href: '/videos', label: '영상', icon: '🎥' },
   { href: '/works', label: '작품', icon: '🎬' },

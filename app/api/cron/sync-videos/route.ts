@@ -67,16 +67,24 @@ export async function GET(request: NextRequest) {
   let skipped = 0
   const errors: string[] = []
 
+  /** 공식 채널(넷플릭스/티빙 등) 가중치: 매칭 점수에 보너스 적용 */
+  const OFFICIAL_CHANNEL_BONUS = 0.3
+  const MATCH_THRESHOLD = 0.7
+  const PENDING_THRESHOLD = 0.5
+
   for (const work of works as (Work & { title_en?: string | null })[]) {
     const searchTitle = work.title_en || work.title
     try {
-      const videos = await fetchYouTubeVideos(searchTitle, 10)
+      const videos = await fetchYouTubeVideos(searchTitle, 12)
       await sleep(DELAY_MS)
 
       for (const v of videos) {
-        const { score } = matchWorkTitle(v.title, searchTitle)
+        const { score: rawScore } = matchWorkTitle(v.title, searchTitle)
+        const score = v.is_official_channel
+          ? Math.min(1, rawScore + OFFICIAL_CHANNEL_BONUS)
+          : rawScore
 
-        if (score >= 0.7) {
+        if (score >= MATCH_THRESHOLD) {
           const { error: upsertErr } = await supabase.from('videos').upsert(
             {
               work_id: work.id,
@@ -94,7 +102,7 @@ export async function GET(request: NextRequest) {
           )
           if (upsertErr) errors.push(`video ${v.youtube_id}: ${upsertErr.message}`)
           else synced++
-        } else if (score >= 0.5 && score < 0.7) {
+        } else if (score >= PENDING_THRESHOLD && score < MATCH_THRESHOLD) {
           const { error: pendingErr } = await supabase.from('pending_videos').insert({
             youtube_id: v.youtube_id,
             title: v.title,

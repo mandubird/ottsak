@@ -1,6 +1,6 @@
 /**
  * Supabase DB 스키마 기반 TypeScript 타입 정의
- * 테이블: works, videos, pending_videos
+ * works, videos, pending_videos, platforms, work_platforms, weekly_rankings, monthly_rankings
  */
 
 export type WorkType = 'movie' | 'series'
@@ -96,4 +96,47 @@ export interface VideoInsert {
   duration_sec?: number | null
   match_score?: number | null
   published_at?: string | null
+}
+
+/** platforms (플랫폼 마스터) */
+export interface Platform {
+  id: string
+  name: string
+}
+
+/** work_platforms (작품–플랫폼 N:M) */
+export interface WorkPlatform {
+  work_id: string
+  platform_id: string
+}
+
+/** weekly_rankings (주간 스냅샷) */
+export interface WeeklyRanking {
+  id: string
+  work_id: string
+  rank: number
+  score: number
+  week: number
+  year: number
+  created_at: string
+}
+
+/** monthly_rankings (월간 집계) */
+export interface MonthlyRanking {
+  id: string
+  work_id: string
+  rank: number
+  score: number
+  month: number
+  year: number
+}
+
+/** 주간 랭킹 + 작품 정보 (카드용) */
+export interface WeeklyRankingWithWork extends WeeklyRanking {
+  work: Pick<Work, 'id' | 'slug' | 'title' | 'poster_url' | 'type' | 'release_date'> | null
+}
+
+/** 월간 랭킹 + 작품 정보 */
+export interface MonthlyRankingWithWork extends MonthlyRanking {
+  work: Pick<Work, 'id' | 'slug' | 'title' | 'poster_url' | 'type' | 'release_date'> | null
 }

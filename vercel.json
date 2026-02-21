@@ -1,6 +1,8 @@
 {
   "crons": [
     { "path": "/api/cron/sync-videos", "schedule": "0 18 * * *" },
-    { "path": "/api/cron/sync-works", "schedule": "0 19 * * 3" }
+    { "path": "/api/cron/sync-works", "schedule": "0 19 * * 3" },
+    { "path": "/api/cron/sync-weekly-ranking", "schedule": "59 14 * * 0" },
+    { "path": "/api/cron/sync-monthly-ranking", "schedule": "0 15 1 * *" }
   ]
 }

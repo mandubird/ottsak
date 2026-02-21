@@ -38,7 +38,7 @@ export function WorkDetailSections({ work }: WorkDetailSectionsProps) {
             if (typeof navigator !== 'undefined' && navigator.share) {
               navigator
                 .share({
-                  title: `${work.title} — 옽싹`,
+                  title: `${work.title} — 오싹`,
                   url,
                   text: work.overview ?? work.title,
                 })
