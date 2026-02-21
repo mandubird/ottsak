@@ -45,7 +45,10 @@ async function get<T>(path: string, params: Record<string, string> = {}): Promis
 }
 
 /** 영화 상세 → works 행 */
-async function movieToRow(movie: Record<string, unknown>): Promise<TmdbWorkRow> {
+async function movieToRow(
+  movie: Record<string, unknown>,
+  platform: string[] | null = null
+): Promise<TmdbWorkRow> {
   const id = movie.id as number
   const title = (movie.title as string) || ''
   const titleEn = (movie.original_title as string) || null
@@ -62,7 +65,7 @@ async function movieToRow(movie: Record<string, unknown>): Promise<TmdbWorkRow> 
     title_en: titleEn || title || null,
     type: 'movie',
     genre: genres.map((g) => g.name),
-    platform: null,
+    platform,
     release_date: release?.slice(0, 10) || null,
     rating: vote != null ? Math.round(vote * 10) / 10 : null,
     poster_url: poster,
@@ -73,7 +76,10 @@ async function movieToRow(movie: Record<string, unknown>): Promise<TmdbWorkRow> 
 }
 
 /** TV 상세 → works 행 */
-async function tvToRow(tv: Record<string, unknown>): Promise<TmdbWorkRow> {
+async function tvToRow(
+  tv: Record<string, unknown>,
+  platform: string[] | null = null
+): Promise<TmdbWorkRow> {
   const id = tv.id as number
   const title = (tv.name as string) || ''
   const titleEn = (tv.original_name as string) || null
@@ -90,7 +96,7 @@ async function tvToRow(tv: Record<string, unknown>): Promise<TmdbWorkRow> {
     title_en: titleEn || title || null,
     type: 'series',
     genre: genres.map((g) => g.name),
-    platform: null,
+    platform,
     release_date: release?.slice(0, 10) || null,
     rating: vote != null ? Math.round(vote * 10) / 10 : null,
     poster_url: poster,
@@ -100,7 +106,113 @@ async function tvToRow(tv: Record<string, unknown>): Promise<TmdbWorkRow> {
   }
 }
 
-/** 트렌딩 영화 N개 수집 (상세 포함) */
+const WATCH_REGION = 'KR'
+const NETFLIX_PROVIDER = '8'
+const DISNEY_PROVIDER = '337'
+
+type TmdbDiscoverItem = { id: number; popularity?: number }
+
+/** 한국에서 넷플릭스/디즈니+로 볼 수 있는 작품 ID 목록 (인기순) */
+async function discoverIdsInKorea(
+  type: 'movie' | 'tv',
+  provider: string,
+  pageLimit: number = 2
+): Promise<Map<number, string[]>> {
+  const idToPlatforms = new Map<number, string[]>()
+  const sort = 'popularity.desc'
+  const path = type === 'movie' ? '/discover/movie' : '/discover/tv'
+
+  for (let page = 1; page <= pageLimit; page++) {
+    const data = await get<{ results: TmdbDiscoverItem[] }>(path, {
+      watch_region: WATCH_REGION,
+      with_watch_providers: provider,
+      sort_by: sort,
+      page: String(page),
+    })
+    const list = data.results || []
+    const platformName = provider === NETFLIX_PROVIDER ? 'Netflix' : 'Disney+'
+    for (const item of list) {
+      const existing = idToPlatforms.get(item.id) || []
+      if (!existing.includes(platformName)) existing.push(platformName)
+      idToPlatforms.set(item.id, existing)
+    }
+  }
+  return idToPlatforms
+}
+
+/** 한국 넷플릭스+디즈니 인기순 영화 수집 (기본값) */
+async function fetchMoviesInKorea(limit: number = 30): Promise<TmdbWorkRow[]> {
+  const [netflix, disney] = await Promise.all([
+    discoverIdsInKorea('movie', NETFLIX_PROVIDER),
+    discoverIdsInKorea('movie', DISNEY_PROVIDER),
+  ])
+  const merged = new Map<number, string[]>()
+  for (const [id, platforms] of netflix) {
+    merged.set(id, [...(merged.get(id) || []), ...platforms])
+  }
+  for (const [id, platforms] of disney) {
+    const cur = merged.get(id) || []
+    for (const p of platforms) {
+      if (!cur.includes(p)) cur.push(p)
+    }
+    merged.set(id, cur)
+  }
+  const ids = Array.from(merged.keys()).slice(0, limit)
+  const rows: TmdbWorkRow[] = []
+  for (const id of ids) {
+    try {
+      const detail = await get<Record<string, unknown>>(`/movie/${id}`)
+      rows.push(await movieToRow(detail, merged.get(id) || null))
+      await new Promise((r) => setTimeout(r, 120))
+    } catch (e) {
+      console.warn(`TMDB movie ${id} skip:`, e)
+    }
+  }
+  return rows
+}
+
+/** 한국 넷플릭스+디즈니 인기순 TV 수집 (기본값) */
+async function fetchTvInKorea(limit: number = 30): Promise<TmdbWorkRow[]> {
+  const [netflix, disney] = await Promise.all([
+    discoverIdsInKorea('tv', NETFLIX_PROVIDER),
+    discoverIdsInKorea('tv', DISNEY_PROVIDER),
+  ])
+  const merged = new Map<number, string[]>()
+  for (const [id, platforms] of netflix) merged.set(id, [...(merged.get(id) || []), ...platforms])
+  for (const [id, platforms] of disney) {
+    const cur = merged.get(id) || []
+    for (const p of platforms) {
+      if (!cur.includes(p)) cur.push(p)
+    }
+    merged.set(id, cur)
+  }
+  const ids = Array.from(merged.keys()).slice(0, limit)
+  const rows: TmdbWorkRow[] = []
+  for (const id of ids) {
+    try {
+      const detail = await get<Record<string, unknown>>(`/tv/${id}`)
+      rows.push(await tvToRow(detail, merged.get(id) || null))
+      await new Promise((r) => setTimeout(r, 120))
+    } catch (e) {
+      console.warn(`TMDB tv ${id} skip:`, e)
+    }
+  }
+  return rows
+}
+
+/** [기본값] 한국에서 넷플릭스/디즈니+로 볼 수 있는 작품만 인기순으로 수집 */
+export async function fetchWorksInKorea(
+  movieLimit: number = 30,
+  tvLimit: number = 30
+): Promise<TmdbWorkRow[]> {
+  const [movies, tvs] = await Promise.all([
+    fetchMoviesInKorea(movieLimit),
+    fetchTvInKorea(tvLimit),
+  ])
+  return [...movies, ...tvs]
+}
+
+/** 트렌딩 영화 N개 수집 (상세 포함) - 레거시 */
 export async function fetchTrendingMovies(limit: number = 15): Promise<TmdbWorkRow[]> {
   const data = await get<{ results: { id: number }[] }>('/trending/movie/week')
   const list = (data.results || []).slice(0, limit)
@@ -117,7 +229,7 @@ export async function fetchTrendingMovies(limit: number = 15): Promise<TmdbWorkR
   return rows
 }
 
-/** 트렌딩 TV N개 수집 (상세 포함) */
+/** 트렌딩 TV N개 수집 (상세 포함) - 레거시 */
 export async function fetchTrendingTv(limit: number = 15): Promise<TmdbWorkRow[]> {
   const data = await get<{ results: { id: number }[] }>('/trending/tv/week')
   const list = (data.results || []).slice(0, limit)
@@ -134,7 +246,33 @@ export async function fetchTrendingTv(limit: number = 15): Promise<TmdbWorkRow[]
   return rows
 }
 
-/** 영화 + TV 트렌딩 수집 (한 번에 호출용) */
+/** 작품명으로 TMDB 검색 → 한 건 상세 조회 후 works 행 반환 (수동 리스트용) */
+export async function fetchWorkByTitle(title: string): Promise<TmdbWorkRow | null> {
+  const trimmed = title.trim()
+  if (!trimmed) return null
+  const data = await get<{ results: { id: number; media_type: string }[] }>('/search/multi', {
+    query: trimmed,
+    language: 'ko-KR',
+    page: '1',
+  })
+  const first = data.results?.[0]
+  if (!first) return null
+  try {
+    if (first.media_type === 'movie') {
+      const detail = await get<Record<string, unknown>>(`/movie/${first.id}`)
+      return movieToRow(detail)
+    }
+    if (first.media_type === 'tv') {
+      const detail = await get<Record<string, unknown>>(`/tv/${first.id}`)
+      return tvToRow(detail)
+    }
+  } catch (e) {
+    console.warn(`TMDB fetch ${first.media_type} ${first.id}:`, e)
+  }
+  return null
+}
+
+/** 영화 + TV 트렌딩 수집 - 레거시 (기본은 fetchWorksInKorea 사용) */
 export async function fetchTrendingWorks(
   movieLimit: number = 10,
   tvLimit: number = 10

@@ -1,6 +1,6 @@
 import { NextRequest } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
-import { fetchTrendingWorks } from '@/lib/tmdb/fetchWorks'
+import { fetchWorksInKorea } from '@/lib/tmdb/fetchWorks'
 
 const CRON_SECRET = process.env.CRON_SECRET
 
@@ -40,7 +40,7 @@ export async function GET(request: NextRequest) {
   const errors: string[] = []
 
   try {
-    const works = await fetchTrendingWorks(10, 10)
+    const works = await fetchWorksInKorea(30, 30)
 
     for (const w of works) {
       const { data: existing } = await supabase
