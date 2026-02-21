@@ -10,6 +10,15 @@ const PLATFORM_NAMES: Record<string, string> = {
   'TVING': '티빙',
 }
 
+const PLATFORM_URLS: Record<string, string> = {
+  'Netflix': 'https://www.netflix.com/browse',
+  'Disney+': 'https://www.disneyplus.com/',
+  'wavve': 'https://www.wavve.com/',
+  'Watcha': 'https://watcha.com/',
+  'Coupang Play': 'https://www.coupangplay.com/',
+  'TVING': 'https://www.tving.com/',
+}
+
 interface WorkHeroProps {
   work: Work
 }
@@ -88,9 +97,30 @@ export function WorkHero({ work }: WorkHeroProps) {
             )}
           </div>
           {work.platform && work.platform.length > 0 && (
-            <p className="mt-2 text-sm text-text-muted">
-              {work.platform.map((p) => PLATFORM_NAMES[p] || p).join(' · ')}
-            </p>
+            <div className="mt-3 flex flex-wrap gap-2">
+              {work.platform.map((p) => {
+                const url = PLATFORM_URLS[p]
+                const label = PLATFORM_NAMES[p] || p
+                return url ? (
+                  <a
+                    key={p}
+                    href={url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center rounded-lg bg-accent px-4 py-2 text-sm font-medium text-white transition hover:opacity-90"
+                  >
+                    {label}에서 보기
+                  </a>
+                ) : (
+                  <span
+                    key={p}
+                    className="inline-flex items-center rounded-lg border border-border bg-surface px-4 py-2 text-sm text-text-muted"
+                  >
+                    {label}
+                  </span>
+                )
+              })}
+            </div>
           )}
           {work.overview && (
             <p className="mt-4 max-w-2xl text-text-muted leading-relaxed line-clamp-5">

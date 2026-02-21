@@ -51,6 +51,9 @@ export function WorkCard({ work }: WorkCardProps) {
         <h3 className="line-clamp-2 font-medium text-text group-hover:text-accent">
           {work.title}
         </h3>
+        {work.overview && (
+          <p className="mt-1 line-clamp-2 text-xs text-text-muted">{work.overview}</p>
+        )}
         {work.genre && work.genre.length > 0 && (
           <div className="mt-1 flex flex-wrap gap-1">
             {work.genre.slice(0, 3).map((g) => (

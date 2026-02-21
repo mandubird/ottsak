@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import { Montserrat, Noto_Sans_KR } from 'next/font/google'
+import { BottomNav } from '@/components/BottomNav'
 import './globals.css'
 
 const notoSansKr = Noto_Sans_KR({
@@ -38,6 +39,7 @@ export default function RootLayout({
     <html lang="ko" className={`${notoSansKr.variable} ${montserrat.variable}`}>
       <body className="min-h-screen bg-bg text-text antialiased">
         {children}
+        <BottomNav />
       </body>
     </html>
   )

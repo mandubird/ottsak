@@ -2,7 +2,8 @@ import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { WorkHero } from '@/components/WorkHero'
-import { VideoHub } from '@/components/VideoHub'
+import { WorkDetailVideos } from '@/components/WorkDetailVideos'
+import { RelatedItems } from '@/components/RelatedItems'
 import type { Work, Video } from '@/types/database'
 
 export const revalidate = 300
@@ -54,13 +55,14 @@ export default async function WorkDetailPage({ params }: PageProps) {
   const sortedVideos = [...videos].sort((a, b) => Number(b.view_count - a.view_count))
 
   return (
-    <main className="min-h-screen">
+    <main className="min-h-screen pb-20 md:pb-0">
       <header className="sticky top-0 z-10 border-b border-border bg-bg/95 backdrop-blur">
         <div className="mx-auto flex max-w-content items-center justify-between px-4 py-4">
           <a href="/" className="font-heading text-2xl font-bold tracking-wide text-accent">
             옽싹
           </a>
-          <nav className="flex gap-6 text-sm text-text-muted">
+          <nav className="hidden gap-6 text-sm text-text-muted md:flex">
+            <a href="/search" className="hover:text-text">검색</a>
             <a href="/works" className="hover:text-text">작품</a>
             <a href="/videos" className="hover:text-text">영상</a>
             <a href="/schedule" className="hover:text-text">일정</a>
@@ -68,7 +70,8 @@ export default async function WorkDetailPage({ params }: PageProps) {
         </div>
       </header>
       <WorkHero work={work} />
-      <VideoHub videos={sortedVideos} showWorkLink={false} />
+      <WorkDetailVideos videos={sortedVideos} />
+      <RelatedItems work={work} />
     </main>
   )
 }
