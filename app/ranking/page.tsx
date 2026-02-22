@@ -30,8 +30,8 @@ export default async function RankingPage() {
     .order('rank', { ascending: true })
 
   const items = (rows ?? []).map((r: Record<string, unknown>) => ({
-    rank: r.rank,
-    score: r.score,
+    rank: Number(r.rank),
+    score: Number(r.score),
     work: r.works as Pick<Work, 'id' | 'slug' | 'title' | 'poster_url' | 'type' | 'release_date' | 'platform'> | null,
   }))
 

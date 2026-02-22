@@ -147,16 +147,16 @@ async function fetchMoviesInKorea(limit: number = 30): Promise<TmdbWorkRow[]> {
     discoverIdsInKorea('movie', DISNEY_PROVIDER),
   ])
   const merged = new Map<number, string[]>()
-  for (const [id, platforms] of netflix) {
+  netflix.forEach((platforms, id) => {
     merged.set(id, [...(merged.get(id) || []), ...platforms])
-  }
-  for (const [id, platforms] of disney) {
+  })
+  disney.forEach((platforms, id) => {
     const cur = merged.get(id) || []
     for (const p of platforms) {
       if (!cur.includes(p)) cur.push(p)
     }
     merged.set(id, cur)
-  }
+  })
   const ids = Array.from(merged.keys()).slice(0, limit)
   const rows: TmdbWorkRow[] = []
   for (const id of ids) {
@@ -178,14 +178,14 @@ async function fetchTvInKorea(limit: number = 30): Promise<TmdbWorkRow[]> {
     discoverIdsInKorea('tv', DISNEY_PROVIDER),
   ])
   const merged = new Map<number, string[]>()
-  for (const [id, platforms] of netflix) merged.set(id, [...(merged.get(id) || []), ...platforms])
-  for (const [id, platforms] of disney) {
+  netflix.forEach((platforms, id) => merged.set(id, [...(merged.get(id) || []), ...platforms]))
+  disney.forEach((platforms, id) => {
     const cur = merged.get(id) || []
     for (const p of platforms) {
       if (!cur.includes(p)) cur.push(p)
     }
     merged.set(id, cur)
-  }
+  })
   const ids = Array.from(merged.keys()).slice(0, limit)
   const rows: TmdbWorkRow[] = []
   for (const id of ids) {

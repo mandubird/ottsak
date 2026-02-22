@@ -55,8 +55,8 @@ export default async function RankingSlugPage({ params }: { params: Promise<{ sl
     if (!rows?.length) notFound()
 
     const items = rows.map((r: Record<string, unknown>) => ({
-      rank: r.rank,
-      score: r.score,
+      rank: Number(r.rank),
+      score: Number(r.score),
       work: r.works as Pick<Work, 'id' | 'slug' | 'title' | 'poster_url' | 'type' | 'release_date' | 'platform'> | null,
     }))
 
@@ -104,8 +104,8 @@ export default async function RankingSlugPage({ params }: { params: Promise<{ sl
 
   const monthNames = ['', '1월', '2월', '3월', '4월', '5월', '6월', '7월', '8월', '9월', '10월', '11월', '12월']
   const items = rows.map((r: Record<string, unknown>) => ({
-    rank: r.rank,
-    score: r.score,
+    rank: Number(r.rank),
+    score: Number(r.score),
     work: r.works as Pick<Work, 'id' | 'slug' | 'title' | 'poster_url' | 'type' | 'release_date' | 'platform'> | null,
   }))
 

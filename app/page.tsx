@@ -55,8 +55,8 @@ export default async function HomePage() {
   ])
 
   const top10Items = (weeklyRows ?? []).map((r: Record<string, unknown>) => ({
-    rank: r.rank,
-    score: r.score,
+    rank: Number(r.rank),
+    score: Number(r.score),
     work: r.works as Pick<Work, 'id' | 'slug' | 'title' | 'poster_url' | 'type' | 'release_date' | 'platform'> | null,
   }))
 

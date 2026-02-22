@@ -15,7 +15,7 @@ function parseYoutubeIds(input: string[]): string[] {
     if (urlMatch) ids.push(urlMatch[1])
     else if (idPattern.test(trimmed)) ids.push(trimmed)
   }
-  return [...new Set(ids)]
+  return Array.from(new Set(ids))
 }
 
 /**
