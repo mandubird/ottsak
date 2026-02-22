@@ -200,8 +200,9 @@ export async function getYouTubeEngagementScore(workTitle: string): Promise<numb
   const details = await getVideoDetails(key, list.map((r) => r.id))
   const byId = new Map(list.map((r) => [r.id, { channelTitle: r.channelTitle }]))
 
+  type DetailItem = { id: string; statistics?: { viewCount?: string }; snippet?: { channelTitle?: string } }
   let score = 0
-  for (const item of details as Array<{ id: string; statistics?: { viewCount?: string }; snippet?: { channelTitle?: string }>) {
+  for (const item of details as DetailItem[]) {
     const views = Number(item.statistics?.viewCount ?? 0)
     const channelTitle = item.snippet?.channelTitle ?? byId.get(item.id)?.channelTitle ?? ''
     const bonus = isOfficialChannel(channelTitle) ? 1.5 : 1
