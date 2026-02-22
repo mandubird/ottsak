@@ -43,22 +43,47 @@ export async function GET(request: NextRequest) {
 
   const supabase = createClient()
 
-  const thirtyDaysAgo = new Date()
-  thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30)
-  const since = thirtyDaysAgo.toISOString().split('T')[0]
+  const workSlug = request.nextUrl.searchParams.get('work_slug')?.trim()
 
-  const { data: works, error: worksError } = await supabase
-    .from('works')
-    .select('id, slug, title, title_en')
-    .gte('created_at', since)
-    .order('created_at', { ascending: false })
+  let works: (Work & { title_en?: string | null })[] | null = null
+  let worksError: { message: string } | null = null
+
+  if (workSlug) {
+    const { data: one, error } = await supabase
+      .from('works')
+      .select('id, slug, title, title_en')
+      .eq('slug', workSlug)
+      .maybeSingle()
+    if (error) worksError = error
+    else if (one) works = [one as Work & { title_en?: string | null }]
+  }
+
+  if (!workSlug || !works?.length) {
+    const now = new Date()
+    const thirtyDaysAgo = new Date(now)
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30)
+    const sixMonthsAgo = new Date(now)
+    sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6)
+    const sinceCreated = thirtyDaysAgo.toISOString().split('T')[0]
+    const sinceRelease = sixMonthsAgo.toISOString().split('T')[0]
+
+    // 최근 30일 추가된 작품 OR 출시 예정·최근 6개월 이내 출시 작품 (예고편은 출시 몇 달 전부터 올라옴)
+    const result = await supabase
+      .from('works')
+      .select('id, slug, title, title_en')
+      .or(`created_at.gte.${sinceCreated},release_date.gte.${sinceRelease}`)
+      .order('release_date', { ascending: false, nullsFirst: false })
+
+    worksError = result.error
+    works = (result.data ?? []) as (Work & { title_en?: string | null })[]
+  }
 
   if (worksError || !works?.length) {
     return Response.json({
       synced: 0,
       pending: 0,
       skipped: 0,
-      errors: [worksError?.message ?? 'No recent works'],
+      errors: [worksError?.message ?? (workSlug ? `Work not found: ${workSlug}` : 'No recent works')],
     })
   }
 
@@ -72,7 +97,7 @@ export async function GET(request: NextRequest) {
   const MATCH_THRESHOLD = 0.7
   const PENDING_THRESHOLD = 0.5
 
-  for (const work of works as (Work & { title_en?: string | null })[]) {
+  for (const work of works) {
     const searchTitle = work.title_en || work.title
     try {
       const videos = await fetchYouTubeVideos(searchTitle, 12)

@@ -8,9 +8,10 @@ interface TrailerSectionProps {
   manualTrailerId?: string | null
 }
 
-/** 공식 예고편 1개, 16:9 iframe, 자동재생·음소거 없음 */
+/** 공식 예고편 1개, 16:9 iframe. 수동 등록이 있으면 수동 우선(고정 예고편용) */
 export function TrailerSection({ trailerVideo, manualTrailerId }: TrailerSectionProps) {
-  const youtubeId = trailerVideo?.youtube_id ?? (manualTrailerId && manualTrailerId.length === 11 ? manualTrailerId : null)
+  const manualId = manualTrailerId && manualTrailerId.length === 11 ? manualTrailerId : null
+  const youtubeId = manualId ?? trailerVideo?.youtube_id ?? null
 
   if (!youtubeId) return null
 
