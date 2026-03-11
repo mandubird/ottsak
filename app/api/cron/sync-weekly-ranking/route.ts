@@ -1,5 +1,5 @@
 import { NextRequest } from 'next/server'
-import { createClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin'
 import { fetchPopularInKorea } from '@/lib/ranking/fetchPopularKorea'
 
 const CRON_SECRET = process.env.CRON_SECRET
@@ -32,7 +32,7 @@ export async function GET(request: NextRequest) {
     return Response.json({ ok: false, message: 'No popular items', year, week })
   }
 
-  const supabase = createClient()
+  const supabase = createAdminClient()
 
   const platformNameToId = new Map<string, string>()
   const { data: platforms } = await supabase.from('platforms').select('id, name')

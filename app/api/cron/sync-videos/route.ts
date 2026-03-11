@@ -1,5 +1,5 @@
 import { NextRequest } from 'next/server'
-import { createClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin'
 import { fetchYouTubeVideos } from '@/lib/youtube/fetchVideos'
 import { matchWorkTitle } from '@/lib/matching/fuzzyMatch'
 import type { Work } from '@/types/database'
@@ -41,7 +41,7 @@ export async function GET(request: NextRequest) {
     )
   }
 
-  const supabase = createClient()
+  const supabase = createAdminClient()
 
   const workSlug = request.nextUrl.searchParams.get('work_slug')?.trim()
 

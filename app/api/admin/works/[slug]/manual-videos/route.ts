@@ -1,5 +1,5 @@
 import { NextRequest } from 'next/server'
-import { createClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin'
 
 const CRON_SECRET = process.env.CRON_SECRET
 
@@ -48,7 +48,7 @@ export async function PATCH(request: NextRequest) {
   const raw = Array.isArray(body.youtube_ids) ? body.youtube_ids : []
   const youtube_ids = parseYoutubeIds(raw)
 
-  const supabase = createClient()
+  const supabase = createAdminClient()
   const { data: work, error: findError } = await supabase
     .from('works')
     .select('id')

@@ -1,5 +1,5 @@
 import { NextRequest } from 'next/server'
-import { createClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin'
 import { fetchWorkByTitle } from '@/lib/tmdb/fetchWorks'
 
 const CRON_SECRET = process.env.CRON_SECRET
@@ -35,7 +35,7 @@ export async function POST(request: NextRequest) {
     )
   }
 
-  const supabase = createClient()
+  const supabase = createAdminClient()
   let added = 0
   let skipped = 0
   const errors: string[] = []

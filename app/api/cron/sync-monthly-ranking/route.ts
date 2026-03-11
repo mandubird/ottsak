@@ -1,5 +1,5 @@
 import { NextRequest } from 'next/server'
-import { createClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin'
 
 const CRON_SECRET = process.env.CRON_SECRET
 
@@ -21,7 +21,7 @@ export async function GET(request: NextRequest) {
   const from = firstDay.toISOString().slice(0, 10)
   const to = lastDay.toISOString().slice(0, 10)
 
-  const supabase = createClient()
+  const supabase = createAdminClient()
 
   const { data: rows, error: selectErr } = await supabase
     .from('weekly_rankings')
